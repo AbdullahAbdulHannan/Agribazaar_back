@@ -52,6 +52,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const corsOptions = {
     origin: [
         'https://agribazaar-frontend-pgv6.vercel.app', 
+        'https://agri-frontend-five.vercel.app',
         'http://localhost:5173',
         'http://localhost:3000'
     ],

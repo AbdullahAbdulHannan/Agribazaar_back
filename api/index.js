@@ -51,7 +51,8 @@ const corsOptions = {
     origin: [
         'https://agribazaar-frontend-pgv6.vercel.app', 
         'http://localhost:5173',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'https://agri-frontend-five.vercel.app'
     ],
     credentials: true,
     optionsSuccessStatus: 200
