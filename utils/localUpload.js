@@ -2,20 +2,26 @@ const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
+// Base uploads directory (use /tmp on Vercel)
+const BASE_UPLOAD_DIR = process.env.VERCEL === '1'
+  ? path.join('/tmp', 'uploads')
+  : path.join(process.cwd(), 'uploads');
+
 // Create upload directories if they don't exist
 const createUploadDirs = async () => {
   const dirs = [
-    'uploads',
-    'uploads/auction-images',
-    'uploads/auction-documents',
-    'uploads/temp'
+    '',
+    'auction-images',
+    'auction-documents',
+    'temp'
   ];
   
-  for (const dir of dirs) {
+  for (const sub of dirs) {
+    const dirPath = path.join(BASE_UPLOAD_DIR, sub);
     try {
-      await fs.access(dir);
+      await fs.access(dirPath);
     } catch {
-      await fs.mkdir(dir, { recursive: true });
+      await fs.mkdir(dirPath, { recursive: true });
     }
   }
 };
@@ -28,22 +34,25 @@ const uploadToLocal = async (fileBuffer, folder = 'uploads', fileName = null) =>
   try {
     const fileExtension = fileName ? path.extname(fileName) : '.jpg';
     const uniqueFileName = `${uuidv4()}${fileExtension}`;
-    const filePath = path.join(folder, uniqueFileName);
-    const fullPath = path.join(process.cwd(), filePath);
+    // Determine target directory under base uploads
+    const subFolder = folder
+      ? folder.replace(/^uploads[\\/]?/, '')
+      : '';
+    const targetDir = path.join(BASE_UPLOAD_DIR, subFolder);
+    const fullPath = path.join(targetDir, uniqueFileName);
     
     // Ensure the directory exists
-    const dir = path.dirname(fullPath);
-    await fs.mkdir(dir, { recursive: true });
+    await fs.mkdir(targetDir, { recursive: true });
     
     // Write file to disk
     await fs.writeFile(fullPath, fileBuffer);
     
     // Return file information with correct URL path (using forward slashes)
-    const urlPath = filePath.replace(/\\/g, '/'); // Convert backslashes to forward slashes
+    const urlPath = path.posix.join('uploads', subFolder.replace(/\\/g, '/'), uniqueFileName);
     
     return {
       url: `/${urlPath}`, // Include the full path including subdirectories
-      path: filePath,
+      path: urlPath,
       fileName: uniqueFileName,
       originalName: fileName || 'uploaded-file',
       size: fileBuffer.length
@@ -57,7 +66,8 @@ const uploadToLocal = async (fileBuffer, folder = 'uploads', fileName = null) =>
 // Delete file from local storage
 const deleteFromLocal = async (filePath) => {
   try {
-    const fullPath = path.join(process.cwd(), filePath);
+    const relative = filePath.replace(/^uploads[\\/]?/, '');
+    const fullPath = path.join(BASE_UPLOAD_DIR, relative);
     await fs.unlink(fullPath);
     return { success: true };
   } catch (error) {
@@ -69,7 +79,8 @@ const deleteFromLocal = async (filePath) => {
 // Get file info
 const getFileInfo = async (filePath) => {
   try {
-    const fullPath = path.join(process.cwd(), filePath);
+    const relative = filePath.replace(/^uploads[\\/]?/, '');
+    const fullPath = path.join(BASE_UPLOAD_DIR, relative);
     const stats = await fs.stat(fullPath);
     return {
       exists: true,
@@ -85,7 +96,7 @@ const getFileInfo = async (filePath) => {
 // Clean up old temporary files
 const cleanupTempFiles = async (maxAge = 24 * 60 * 60 * 1000) => { // 24 hours
   try {
-    const tempDir = path.join(process.cwd(), 'uploads/temp');
+    const tempDir = path.join(BASE_UPLOAD_DIR, 'temp');
     const files = await fs.readdir(tempDir);
     const now = Date.now();
     
@@ -104,7 +115,9 @@ const cleanupTempFiles = async (maxAge = 24 * 60 * 60 * 1000) => { // 24 hours
 };
 
 // Schedule cleanup every hour
-setInterval(cleanupTempFiles, 60 * 60 * 1000);
+if (process.env.VERCEL !== '1') {
+  setInterval(cleanupTempFiles, 60 * 60 * 1000);
+}
 
 // Get content type based on file extension
 const getContentType = (extension) => {
