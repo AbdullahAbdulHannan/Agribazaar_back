@@ -14,8 +14,7 @@ yarn-error.log*
 .next
 dist/
 
-# Uploads
-uploads/
+
 
 # OS generated files
 .DS_Store
