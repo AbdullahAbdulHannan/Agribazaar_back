@@ -739,8 +739,8 @@ const updateSellerOrderStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Seller order not found' });
         }
 
-        // Validate status transition (default to 'pending' if missing)
-        const currentStatus = sellerOrder.status || 'pending';
+        // Validate status transition
+        const currentStatus = sellerOrder.status;
         const allowedTransitions = statusFlow[currentStatus] || [];
         
         if (!allowedTransitions.includes(status)) {
