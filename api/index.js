@@ -2,25 +2,25 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const connectDB = require('./db/database');
-const logger = require('./utils/logger');
+const connectDB = require('../db/database');
+const logger = require('../utils/logger');
 
 // Import routes
-const userRoutes = require('./routes/userRoutes');
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const auctionRoutes = require('./routes/auctionRoutes');
-const fileRoutes = require('./routes/fileRoutes');
-const chatbotRoutes = require('./routes/chatbotRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const webhookRoutes = require('./routes/webhookRoutes');
-const escrowRoutes = require('./routes/escrowRoutes');
-const notificationRouter = require('./routes/notificationRoutes').router;
-const reviewRoutes = require('./routes/reviewRoutes');
-const stripeConnectRoutes = require('./routes/stripeConnectRoutes');
+const userRoutes = require('../routes/userRoutes');
+const productRoutes = require('../routes/productRoutes');
+const cartRoutes = require('../routes/cartRoutes');
+const auctionRoutes = require('../routes/auctionRoutes');
+const fileRoutes = require('../routes/fileRoutes');
+const chatbotRoutes = require('../routes/chatbotRoutes');
+const orderRoutes = require('../routes/orderRoutes');
+const webhookRoutes = require('../routes/webhookRoutes');
+const escrowRoutes = require('../routes/escrowRoutes');
+const notificationRouter = require('../routes/notificationRoutes').router;
+const reviewRoutes = require('../routes/reviewRoutes');
+const stripeConnectRoutes = require('../routes/stripeConnectRoutes');
 
 // Import jobs
-const { scheduleEscrowRelease } = require('./jobs/escrowReleaseJob');
+const { scheduleEscrowRelease } = require('../jobs/escrowReleaseJob');
 
 // Initialize express app
 const app = express();
