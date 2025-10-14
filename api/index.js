@@ -2,20 +2,22 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const connectDB = require('../db/database');
-const logger = require('../utils/logger');
+const connectDB = require('./db/database');
+const logger = require('./utils/logger');
 
 // Import routes
-const userRoutes = require('../routes/userRoutes');
-const productRoutes = require('../routes/productRoutes');
-const cartRoutes = require('../routes/cartRoutes');
-const auctionRoutes = require('../routes/auctionRoutes');
-const fileRoutes = require('../routes/fileRoutes');
-const chatbotRoutes = require('../routes/chatbotRoutes');
-const orderRoutes = require('../routes/orderRoutes');
-const webhookRoutes = require('../routes/webhookRoutes');
-const escrowRoutes = require('../routes/escrowRoutes');
-const notificationRouter = require('../routes/notificationRoutes').router;
+const userRoutes = require('./routes/userRoutes');
+const productRoutes = require('./routes/productRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const auctionRoutes = require('./routes/auctionRoutes');
+const fileRoutes = require('./routes/fileRoutes');
+const chatbotRoutes = require('./routes/chatbotRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
+const escrowRoutes = require('./routes/escrowRoutes');
+const notificationRouter = require('./routes/notificationRoutes').router;
+const reviewRoutes = require('./routes/reviewRoutes');
+const stripeConnectRoutes = require('./routes/stripeConnectRoutes');
 
 // Import jobs
 const { scheduleEscrowRelease } = require('./jobs/escrowReleaseJob');
@@ -43,9 +45,6 @@ process.on('uncaughtException', (err) => {
 });
 
 // Middleware
-// Raw body parsing for Stripe webhooks (must be before express.json())
-app.use('/api/webhooks', express.raw({ type: 'application/json' }));
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -53,15 +52,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const corsOptions = {
     origin: [
         'https://agribazaar-frontend-pgv6.vercel.app', 
+        'https://agri-frontend-five.vercel.app',
         'http://localhost:5173',
-        'http://localhost:3000',
-        'https://agri-frontend-five.vercel.app'
+        'http://localhost:3000'
     ],
     credentials: true,
     optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+
+// Raw body parsing for Stripe webhooks (must be before express.json())
+app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 
 // Request logging
 app.use((req, res, next) => {
@@ -80,7 +82,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 connectDB();
 
 // Initialize scheduled jobs
-if (process.env.NODE_ENV !== 'test' && process.env.VERCEL !== '1') {
+if (process.env.NODE_ENV !== 'test') {
     try {
         scheduleEscrowRelease();
         logger.info('Scheduled jobs initialized');
@@ -97,12 +99,14 @@ app.use('/api/auth', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/auctions', auctionRoutes);
-app.use('/api/files', fileRoutes);
-app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/webhooks', webhookRoutes);
 app.use('/api/escrow', escrowRoutes);
 app.use('/api/notifications', notificationRouter);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/webhook', webhookRoutes);
+app.use('/api/upload', fileRoutes);
+app.use('/api/stripe', stripeConnectRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -141,4 +145,30 @@ app.use((err, req, res, next) => {
     });
 });
 
-module.exports = (req, res) => app(req, res);
+// Start server
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => {
+    logger.info(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+    logger.error('Unhandled Rejection:', {
+        error: err.message,
+        stack: err.stack
+    });
+    
+    // Close server & exit process
+    server.close(() => process.exit(1));
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM received. Shutting down gracefully');
+    server.close(() => {
+        logger.info('Process terminated');
+        process.exit(0);
+    });
+});
+
+module.exports = server;

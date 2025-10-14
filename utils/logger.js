@@ -19,20 +19,24 @@ const logger = winston.createLogger({
     ),
     transports: [
         // Write all logs with level `error` and below to `error.log`
-        new winston.transports.File({ 
-            filename: 'logs/error.log', 
-            level: 'error',
-            maxsize: 5 * 1024 * 1024, // 5MB
-            maxFiles: 5,
-            tailable: true
-        }),
+        ...(process.env.VERCEL === '1' ? [] : [
+            new winston.transports.File({ 
+                filename: 'logs/error.log', 
+                level: 'error',
+                maxsize: 5 * 1024 * 1024, // 5MB
+                maxFiles: 5,
+                tailable: true
+            }),
+        ]),
         // Write all logs with level `info` and below to `combined.log`
-        new winston.transports.File({ 
-            filename: 'logs/combined.log',
-            maxsize: 10 * 1024 * 1024, // 10MB
-            maxFiles: 5,
-            tailable: true
-        })
+        ...(process.env.VERCEL === '1' ? [] : [
+            new winston.transports.File({ 
+                filename: 'logs/combined.log',
+                maxsize: 10 * 1024 * 1024, // 10MB
+                maxFiles: 5,
+                tailable: true
+            })
+        ])
     ]
 });
 

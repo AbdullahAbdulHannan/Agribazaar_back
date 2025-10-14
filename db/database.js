@@ -6,8 +6,9 @@ if (!cached) {
 }
 
 const connectDB = async () => {
-  if (!process.env.MONGO_URI) {
-    throw new Error('MONGO_URI is not defined');
+  const uri = process.env.MONGO_URI;
+  if (!uri) {
+    throw new Error('MONGO_URI/MONGODB_URI is not defined');
   }
 
   if (cached.conn) {
@@ -16,7 +17,7 @@ const connectDB = async () => {
 
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(process.env.MONGO_URI, {
+      .connect(uri, {
         // Add options if needed
       })
       .then((mongooseInstance) => {
