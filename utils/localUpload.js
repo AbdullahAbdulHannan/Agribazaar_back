@@ -1,9 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs').promises;
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 
 // Base uploads directory (use /tmp on Vercel)
 const BASE_UPLOAD_DIR = process.env.VERCEL === '1'
