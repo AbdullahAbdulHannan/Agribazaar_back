@@ -76,7 +76,20 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Match BASE_UPLOAD_DIR used in utils/localUpload.js
+const baseUploadsDir = process.env.VERCEL === '1'
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, 'uploads');
+
+app.use('/uploads', express.static(baseUploadsDir, {
+  fallthrough: true,
+  setHeaders: (res, filePath) => {
+    // Basic caching for images/docs
+    if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp|\.pdf|\.doc|\.docx)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Connect to database
 connectDB();

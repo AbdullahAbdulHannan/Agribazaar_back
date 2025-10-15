@@ -76,8 +76,20 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from uploads directory (use /tmp on Vercel)
-const UPLOAD_DIR = process.env.VERCEL === '1' ? '/tmp/uploads' : path.join(__dirname, 'uploads');
-app.use('/uploads', express.static(UPLOAD_DIR));
+// Note: This file lives in Backend/api/, so __dirname/uploads would be wrong.
+// Use project root uploads or /tmp/uploads on Vercel to match utils/localUpload.js
+const baseUploadsDir = process.env.VERCEL === '1'
+  ? path.join('/tmp', 'uploads')
+  : path.join(process.cwd(), 'uploads');
+
+app.use('/uploads', express.static(baseUploadsDir, {
+  fallthrough: true,
+  setHeaders: (res, filePath) => {
+    if (/\.(jpg|jpeg|png|gif|webp|pdf|doc|docx)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Connect to database
 connectDB();

@@ -20830,3 +20830,6 @@
 2025-10-15 15:42:23 [[32MINFO[39M]: 	[32mGET /api/orders/user-orders[39m
 2025-10-15 15:42:23 [[32MINFO[39M]: 	[32mGET /api/cart[39m
 2025-10-15 15:42:23 [[32MINFO[39M]: 	[32mGET /api/cart/summary[39m
+2025-10-15 19:49:41 [[32MINFO[39M]: 	[32mEscrow release job scheduled to run daily at 1 AM[39m
+2025-10-15 19:49:41 [[32MINFO[39M]: 	[32mScheduled jobs initialized[39m
+2025-10-15 19:49:41 [[32MINFO[39M]: 	[32mServer is running in development mode on port 5000[39m
