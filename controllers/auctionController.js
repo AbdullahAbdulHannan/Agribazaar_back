@@ -33,16 +33,20 @@ const createAuction = async (req, res) => {
       securityDeposit: req.body.securityDeposit ? parseFloat(req.body.securityDeposit) : undefined
     };
 
-    // Parse dates first
-    const startDate = new Date(req.body.startTime);
-    const endDate = new Date(req.body.endTime);
+   // Update the date parsing section (around line 32-46)
+const startDate = new Date(req.body.startTime);
+const endDate = new Date(req.body.endTime);
 
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid date format. Please use a valid date format.'
-      });
-    }
+// Convert to local timezone and then to ISO string
+const startDateISO = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString();
+const endDateISO = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000)).toISOString();
+
+if (isNaN(new Date(startDateISO).getTime()) || isNaN(new Date(endDateISO).getTime())) {
+  return res.status(400).json({
+    success: false,
+    message: 'Invalid date format. Please use a valid date format.'
+  });
+}
 
     // Upload images
     const imageUrls = [];
@@ -121,8 +125,8 @@ const createAuction = async (req, res) => {
       startingBid: numericFields.startingBid,
       bidIncrement: numericFields.bidIncrement,
       reservePrice: numericFields.reservePrice,
-      startTime: startDate,
-      endTime: endDate,
+      startTime: startDateISO,
+      endTime: endDateISO,
       leaseDuration: numericFields.leaseDuration,
       paymentTerms: req.body.paymentTerms || '',
       securityDeposit: numericFields.securityDeposit,
