@@ -650,7 +650,8 @@ const getSellerOrders = async (req, res) => {
         const { page = 1, limit = 10, status } = req.query;
 
         const matchCriteria = {
-            'sellerOrders.seller': sellerId
+            'sellerOrders.seller': sellerId,
+            paymentStatus: 'paid'
         };
         if (status) {
             matchCriteria['sellerOrders.status'] = status;
@@ -774,7 +775,7 @@ const updateSellerOrderStatus = async (req, res) => {
             );
 
             if (allDelivered) {
-                order.status = 'completed';
+                order.status = 'delivered';
                 order.completedAt = new Date();
             }
         }
@@ -794,7 +795,7 @@ const updateSellerOrderStatus = async (req, res) => {
                 order.user._id,
                 `Order ${statusMessages[status]}`,
                 `Your order #${order._id} from ${req.user.businessName || 'seller'} ${statusMessages[status]}.`,
-                'order_update',
+                'order',
                 `/orders/${order._id}`,
                 { orderId: order._id, status }
             );

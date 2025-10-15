@@ -351,7 +351,7 @@ const getAuctionsByOwner = async (req, res) => {
 const updateAuction = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
 
     const auction = await Auction.findById(id);
 
@@ -377,6 +377,21 @@ const updateAuction = async (req, res) => {
         message: 'Cannot update auction that has bids'
       });
     }
+
+    // Normalize repeated fields from multipart (string or array)
+    if (updateData.existingImages && !Array.isArray(updateData.existingImages)) {
+      updateData.existingImages = [updateData.existingImages];
+    }
+    if (updateData.existingDocuments && !Array.isArray(updateData.existingDocuments)) {
+      updateData.existingDocuments = [updateData.existingDocuments];
+    }
+
+    // Coerce empty strings to undefined so we don't overwrite with blanks
+    Object.keys(updateData).forEach((k) => {
+      if (typeof updateData[k] === 'string' && updateData[k].trim() === '') {
+        updateData[k] = undefined;
+      }
+    });
 
     // Handle existing images and documents
     let finalImages = [...auction.images];
@@ -426,6 +441,10 @@ const updateAuction = async (req, res) => {
     // Remove the temporary fields
     delete updateData.existingImages;
     delete updateData.existingDocuments;
+
+    // Parse dates if provided
+    if (updateData.startTime) updateData.startTime = new Date(updateData.startTime);
+    if (updateData.endTime) updateData.endTime = new Date(updateData.endTime);
 
     // Check if startTime or endTime have been modified
     const startTimeChanged = updateData.startTime && auction.startTime && 
