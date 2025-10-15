@@ -20,7 +20,6 @@ const upload = multer({
   }
 });
 
-// Create new auction
 const createAuction = async (req, res) => {
   try {
     // Parse and validate numeric fields
@@ -34,7 +33,16 @@ const createAuction = async (req, res) => {
       securityDeposit: req.body.securityDeposit ? parseFloat(req.body.securityDeposit) : undefined
     };
 
-    // ... (keep existing validation code until the file upload section)
+    // Parse dates first
+    const startDate = new Date(req.body.startTime);
+    const endDate = new Date(req.body.endTime);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Please use a valid date format.'
+      });
+    }
 
     // Upload images
     const imageUrls = [];
@@ -48,9 +56,10 @@ const createAuction = async (req, res) => {
             'agribazaar/auction-images',
             file.mimetype || 'image/jpeg'
           );
-          if (result && result.secure_url) {
-            console.log('Upload successful:', result.secure_url);
-            imageUrls.push(result.secure_url);
+          if (result && (result.secure_url || result.url)) {
+            const url = result.secure_url || result.url;
+            console.log('Upload successful:', url);
+            imageUrls.push(url);
           } else {
             console.error('Unexpected upload result:', result);
           }
@@ -78,9 +87,10 @@ const createAuction = async (req, res) => {
             'agribazaar/auction-documents',
             file.mimetype || 'application/octet-stream'
           );
-          if (result && result.secure_url) {
-            console.log('Upload successful:', result.secure_url);
-            documentUrls.push(result.secure_url);
+          if (result && (result.secure_url || result.url)) {
+            const url = result.secure_url || result.url;
+            console.log('Upload successful:', url);
+            documentUrls.push(url);
           } else {
             console.error('Unexpected upload result:', result);
           }
