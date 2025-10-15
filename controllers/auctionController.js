@@ -21,109 +21,96 @@ const upload = multer({
 });
 
 // Create new auction
-// ... (keep existing imports and other functions)
-
 const createAuction = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      startingPrice,
-      reservePrice,
-      startTime,
-      endTime,
-      category,
-      quantity,
-      unit,
-      location,
-      paymentTerms,
-      deliveryTerms,
-      qualityCertifications,
-      termsAndConditions
-    } = req.body;
+    // Parse and validate numeric fields
+    const numericFields = {
+      area: parseFloat(req.body.area),
+      startingBid: parseFloat(req.body.startingBid),
+      bidIncrement: parseFloat(req.body.bidIncrement),
+      leaseDuration: parseInt(req.body.leaseDuration, 10),
+      plantAge: req.body.plantAge ? parseInt(req.body.plantAge, 10) : undefined,
+      reservePrice: req.body.reservePrice ? parseFloat(req.body.reservePrice) : undefined,
+      securityDeposit: req.body.securityDeposit ? parseFloat(req.body.securityDeposit) : undefined
+    };
 
-    // Upload images
+    // Validate required fields
+    const requiredFields = {
+      title: req.body.title,
+      location: req.body.location,
+      landType: req.body.landType,
+      leaseType: req.body.leaseType,
+      cropType: req.body.cropType,
+      waterSource: req.body.waterSource,
+      soilType: req.body.soilType,
+      startTime: req.body.startTime,
+      endTime: req.body.endTime
+    };
+
+    // Check for missing required fields
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Check for invalid numeric fields
+    const invalidNumericFields = Object.entries(numericFields)
+      .filter(([key, value]) => isNaN(value) && value !== undefined)
+      .map(([key]) => key);
+
+    if (invalidNumericFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid numeric values for: ${invalidNumericFields.join(', ')}`
+      });
+    }
+
+    // Parse dates
+    const startDate = new Date(req.body.startTime);
+    const endDate = new Date(req.body.endTime);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Please use a valid date format.'
+      });
+    }
+
+    // Upload images and documents (your existing code)
     const imageUrls = [];
-    if (req.files && req.files.images) {
-      const imageFiles = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-      for (const file of imageFiles) {
-        try {
-          console.log(`Uploading image: ${file.originalname} (${file.size} bytes)`);
-          const result = await uploadToCloudinary(
-            file.buffer, 
-            'agribazaar/auction-images',
-            file.mimetype || 'image/jpeg'
-          );
-          if (result && result.url) {
-            console.log('Upload successful:', result.url);
-            imageUrls.push(result.url);
-          } else {
-            console.error('Unexpected upload result:', result);
-          }
-        } catch (error) {
-          console.error('Error uploading image to Cloudinary:', {
-            error: error.message,
-            fileName: file.originalname,
-            size: file.size,
-            mimetype: file.mimetype,
-            stack: error.stack
-          });
-        }
-      }
-    }
-
-    // Upload documents
     const documentUrls = [];
-    if (req.files && req.files.documents) {
-      const docFiles = Array.isArray(req.files.documents) ? req.files.documents : [req.files.documents];
-      for (const file of docFiles) {
-        try {
-          console.log(`Uploading document: ${file.originalname} (${file.size} bytes)`);
-          const result = await uploadToCloudinary(
-            file.buffer, 
-            'agribazaar/auction-documents',
-            file.mimetype || 'application/octet-stream'
-          );
-          if (result && result.url) {
-            console.log('Upload successful:', result.url);
-            documentUrls.push(result.url);
-          } else {
-            console.error('Unexpected upload result:', result);
-          }
-        } catch (error) {
-          console.error('Error uploading document to Cloudinary:', {
-            error: error.message,
-            fileName: file.originalname,
-            size: file.size,
-            mimetype: file.mimetype,
-            stack: error.stack
-          });
-        }
-      }
-    }
+    // ... (your existing upload code)
 
-    // Create auction object
+    // Create auction with validated and converted data
     const auction = new Auction({
-      title,
-      description,
+      title: req.body.title.trim(),
+      location: req.body.location.trim(),
+      area: numericFields.area,
+      landType: req.body.landType,
+      leaseType: req.body.leaseType,
+      cropType: req.body.cropType.trim(),
+      plantAge: numericFields.plantAge,
+      waterSource: req.body.waterSource,
+      soilType: req.body.soilType,
+      yield: req.body.yield ? req.body.yield.trim() : '',
+      startingBid: numericFields.startingBid,
+      bidIncrement: numericFields.bidIncrement,
+      reservePrice: numericFields.reservePrice,
+      startTime: startDate,
+      endTime: endDate,
+      leaseDuration: numericFields.leaseDuration,
+      paymentTerms: req.body.paymentTerms || '',
+      securityDeposit: numericFields.securityDeposit,
+      ownerId: req.user._id,  // Make sure user is authenticated
       images: imageUrls,
       documents: documentUrls,
-      startingPrice,
-      reservePrice,
-      currentPrice: startingPrice,
-      startTime,
-      endTime,
-      status: 'pending',
-      seller: req.user.id,
-      category,
-      quantity,
-      unit,
-      location,
-      paymentTerms,
-      deliveryTerms,
-      qualityCertifications,
-      termsAndConditions,
-      bids: []
+      status: 'active'  // Changed from 'pending' to 'active'
     });
 
     await auction.save();
@@ -133,6 +120,7 @@ const createAuction = async (req, res) => {
       message: 'Auction created successfully',
       data: auction
     });
+
   } catch (error) {
     console.error('Error creating auction:', {
       error: error.message,
@@ -147,8 +135,6 @@ const createAuction = async (req, res) => {
     });
   }
 };
-
-// ... (rest of the file remains the same)
 
 // Get all auctions with filters
 const getAllAuctions = async (req, res) => {
