@@ -1,6 +1,6 @@
 const Auction = require('../model/auctionModel');
 const User = require('../model/userModel');
-const { uploadToLocal } = require('../utils/localUpload');
+const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
 const multer = require('multer');
 const { createBidNotification, createNotification } = require('./notificationController');
 
@@ -48,22 +48,28 @@ const createAuction = async (req, res) => {
     const imageUrls = [];
     if (req.files && req.files.images) {
       const imageFiles = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-      
-             for (const file of imageFiles) {
-         const result = await uploadToLocal(file.buffer, 'uploads/auction-images', file.originalname);
-         imageUrls.push(result.url);
-       }
+      for (const file of imageFiles) {
+        try {
+          const result = await uploadToCloudinary(file.buffer, 'agribazaar/auction-images');
+          imageUrls.push(result.url);
+        } catch (error) {
+          console.error('Error uploading image to Cloudinary:', error);
+        }
+      }
     }
 
     // Upload documents
     const documentUrls = [];
     if (req.files && req.files.documents) {
-      const documentFiles = Array.isArray(req.files.documents) ? req.files.documents : [req.files.documents];
-      
-             for (const file of documentFiles) {
-         const result = await uploadToLocal(file.buffer, 'uploads/auction-documents', file.originalname);
-         documentUrls.push(result.url);
-       }
+      const docFiles = Array.isArray(req.files.documents) ? req.files.documents : [req.files.documents];
+      for (const file of docFiles) {
+        try {
+          const result = await uploadToCloudinary(file.buffer, 'agribazaar/auction-documents');
+          documentUrls.push(result.url);
+        } catch (error) {
+          console.error('Error uploading document to Cloudinary:', error);
+        }
+      }
     }
 
     // Convert and validate numeric fields
