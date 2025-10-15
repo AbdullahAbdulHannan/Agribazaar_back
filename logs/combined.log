@@ -21547,3 +21547,35 @@
 2025-10-16 00:08:49 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=d6qe7sg4[39m
 2025-10-16 00:08:51 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=d6rt9rne[39m
 2025-10-16 00:08:51 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=d6rtga7d[39m
+2025-10-16 00:17:14 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dhkarwre[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dhkbljqq[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dhkbpjcn[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dhkbupyd[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dhkbzagt[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dhkc6n11[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:15 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:16 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:16 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:17 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:19 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:17:20 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:23:47 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dpzh2gqe[39m
+2025-10-16 00:23:47 [[32MINFO[39M]: 	[32mGET /api/orders/seller-orders[39m
+2025-10-16 00:23:47 [[32MINFO[39M]: 	[32mGET /socket.io/?EIO=4&transport=polling&t=dpzi0nmo[39m
+2025-10-16 00:23:48 [[32MINFO[39M]: 	[32mGET /api/orders/seller-orders[39m
+2025-10-16 00:24:03 [[32MINFO[39M]: 	[32mGET /api/notifications[39m
+2025-10-16 00:24:03 [[32MINFO[39M]: 	[32mGET /api/cart[39m
+2025-10-16 00:24:03 [[32MINFO[39M]: 	[32mGET /api/cart/summary[39m
+2025-10-16 00:30:00 [[32MINFO[39M]: 	[32mRunning scheduled escrow release job...[39m
+2025-10-16 00:30:00 [[31MERROR[39M]: AxiosError: Request failed with status code 401
+    at settle (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\axios\dist\node\axios.cjs:2090:12)
+    at IncomingMessage.handleStreamEnd (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\axios\dist\node\axios.cjs:3207:11)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1701:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\axios\dist\node\axios.cjs:4317:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async cron.schedule.timezone (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\jobs\escrowReleaseJob.js:15:30)
+    at async Timeout._onTimeout (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\node-cron\dist\cjs\scheduler\runner.js:70:44)

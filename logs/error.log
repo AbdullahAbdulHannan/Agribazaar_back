@@ -124,3 +124,13 @@
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async cron.schedule.timezone (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\jobs\escrowReleaseJob.js:15:30)
     at async Timeout._onTimeout (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\node-cron\dist\cjs\scheduler\runner.js:70:44)
+2025-10-16 00:30:00 [[31MERROR[39M]: AxiosError: Request failed with status code 401
+    at settle (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\axios\dist\node\axios.cjs:2090:12)
+    at IncomingMessage.handleStreamEnd (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\axios\dist\node\axios.cjs:3207:11)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1701:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\axios\dist\node\axios.cjs:4317:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async cron.schedule.timezone (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\jobs\escrowReleaseJob.js:15:30)
+    at async Timeout._onTimeout (C:\Users\SS COMP\Downloads\AgriBazaar_starting again\Backend\node_modules\node-cron\dist\cjs\scheduler\runner.js:70:44)
