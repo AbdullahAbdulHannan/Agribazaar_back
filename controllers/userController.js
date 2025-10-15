@@ -225,7 +225,10 @@ exports.googleAuth = async (req, res) => {
         phone: '', // Will be updated later
         role: 'buyer', // Default role
         profilePicture: picture || '',
-        authProvider: 'google'
+        authProvider: 'google',
+        isEmailVerified: true, // Google-verified emails are already verified
+        emailVerificationToken: undefined,
+        emailVerificationExpires: undefined
       });
     } else {
       console.log('User found for email:', email);

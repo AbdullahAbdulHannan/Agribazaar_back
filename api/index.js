@@ -82,6 +82,7 @@ const baseUploadsDir = process.env.VERCEL === '1'
   ? path.join('/tmp', 'uploads')
   : path.join(process.cwd(), 'uploads');
 
+
   
 app.use('/uploads', express.static(baseUploadsDir, {
   fallthrough: true,
