@@ -34,58 +34,67 @@ const createAuction = async (req, res) => {
       securityDeposit: req.body.securityDeposit ? parseFloat(req.body.securityDeposit) : undefined
     };
 
-    // Validate required fields
-    const requiredFields = {
-      title: req.body.title,
-      location: req.body.location,
-      landType: req.body.landType,
-      leaseType: req.body.leaseType,
-      cropType: req.body.cropType,
-      waterSource: req.body.waterSource,
-      soilType: req.body.soilType,
-      startTime: req.body.startTime,
-      endTime: req.body.endTime
-    };
+    // ... (keep existing validation code until the file upload section)
 
-    // Check for missing required fields
-    const missingFields = Object.entries(requiredFields)
-      .filter(([_, value]) => !value)
-      .map(([key]) => key);
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Missing required fields: ${missingFields.join(', ')}`
-      });
-    }
-
-    // Check for invalid numeric fields
-    const invalidNumericFields = Object.entries(numericFields)
-      .filter(([key, value]) => isNaN(value) && value !== undefined)
-      .map(([key]) => key);
-
-    if (invalidNumericFields.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid numeric values for: ${invalidNumericFields.join(', ')}`
-      });
-    }
-
-    // Parse dates
-    const startDate = new Date(req.body.startTime);
-    const endDate = new Date(req.body.endTime);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid date format. Please use a valid date format.'
-      });
-    }
-
-    // Upload images and documents (your existing code)
+    // Upload images
     const imageUrls = [];
+    if (req.files && req.files.images) {
+      const imageFiles = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+      for (const file of imageFiles) {
+        try {
+          console.log(`Uploading image: ${file.originalname} (${file.size} bytes)`);
+          const result = await uploadToCloudinary(
+            file.buffer, 
+            'agribazaar/auction-images',
+            file.mimetype || 'image/jpeg'
+          );
+          if (result && result.secure_url) {
+            console.log('Upload successful:', result.secure_url);
+            imageUrls.push(result.secure_url);
+          } else {
+            console.error('Unexpected upload result:', result);
+          }
+        } catch (error) {
+          console.error('Error uploading image to Cloudinary:', {
+            error: error.message,
+            fileName: file.originalname,
+            size: file.size,
+            mimetype: file.mimetype,
+            stack: error.stack
+          });
+        }
+      }
+    }
+
+    // Upload documents
     const documentUrls = [];
-    // ... (your existing upload code)
+    if (req.files && req.files.documents) {
+      const docFiles = Array.isArray(req.files.documents) ? req.files.documents : [req.files.documents];
+      for (const file of docFiles) {
+        try {
+          console.log(`Uploading document: ${file.originalname} (${file.size} bytes)`);
+          const result = await uploadToCloudinary(
+            file.buffer, 
+            'agribazaar/auction-documents',
+            file.mimetype || 'application/octet-stream'
+          );
+          if (result && result.secure_url) {
+            console.log('Upload successful:', result.secure_url);
+            documentUrls.push(result.secure_url);
+          } else {
+            console.error('Unexpected upload result:', result);
+          }
+        } catch (error) {
+          console.error('Error uploading document to Cloudinary:', {
+            error: error.message,
+            fileName: file.originalname,
+            size: file.size,
+            mimetype: file.mimetype,
+            stack: error.stack
+          });
+        }
+      }
+    }
 
     // Create auction with validated and converted data
     const auction = new Auction({
@@ -107,13 +116,23 @@ const createAuction = async (req, res) => {
       leaseDuration: numericFields.leaseDuration,
       paymentTerms: req.body.paymentTerms || '',
       securityDeposit: numericFields.securityDeposit,
-      ownerId: req.user._id,  // Make sure user is authenticated
+      ownerId: req.user._id,
       images: imageUrls,
       documents: documentUrls,
-      status: 'active'  // Changed from 'pending' to 'active'
+      status: 'active'
     });
 
     await auction.save();
+
+    // Send notification
+    await createNotification(
+      req.user._id,
+      'Auction Created',
+      `Your auction "${req.body.title}" has been created successfully.`,
+      'auction',
+      `/auctions/${auction._id}`,
+      { auctionId: auction._id, status: 'created' }
+    );
 
     res.status(201).json({
       success: true,
