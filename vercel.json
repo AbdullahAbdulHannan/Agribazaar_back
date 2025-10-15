@@ -2,10 +2,10 @@
   "version": 2,
   "builds": [
     { "src": "api/index.js", "use": "@vercel/node" },
-    { "src": "api/uploads/**/*", "use": "@vercel/static" }
+    { "src": "api/uploads/[...path].js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/uploads/(?<path>.+)", "dest": "/api/uploads/$path" },
+    { "src": "/uploads/(?<path>.*)", "dest": "/api/uploads/[...path]" },
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }

@@ -1,6 +1,9 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs').promises;
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
 // Base uploads directory (use /tmp on Vercel)
 const BASE_UPLOAD_DIR = process.env.VERCEL === '1'
@@ -10,7 +13,6 @@ const BASE_UPLOAD_DIR = process.env.VERCEL === '1'
 // Create upload directories if they don't exist
 const createUploadDirs = async () => {
   const dirs = [
-    '',
     'auction-images',
     'auction-documents',
     'temp'
@@ -19,25 +21,24 @@ const createUploadDirs = async () => {
   for (const sub of dirs) {
     const dirPath = path.join(BASE_UPLOAD_DIR, sub);
     try {
-      await fs.access(dirPath);
-    } catch {
       await fs.mkdir(dirPath, { recursive: true });
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
     }
   }
 };
 
-// Initialize directories on module load
-createUploadDirs();
+// Initialize directories
+createUploadDirs().catch(console.error);
 
 // Upload file to local storage
 const uploadToLocal = async (fileBuffer, folder = 'uploads', fileName = null) => {
   try {
     const fileExtension = fileName ? path.extname(fileName) : '.jpg';
     const uniqueFileName = `${uuidv4()}${fileExtension}`;
+    
     // Determine target directory under base uploads
-    const subFolder = folder
-      ? folder.replace(/^uploads[\\/]?/, '')
-      : '';
+    const subFolder = folder.replace(/^uploads[\\/]?/, '');
     const targetDir = path.join(BASE_UPLOAD_DIR, subFolder);
     const fullPath = path.join(targetDir, uniqueFileName);
     
@@ -47,21 +48,20 @@ const uploadToLocal = async (fileBuffer, folder = 'uploads', fileName = null) =>
     // Write file to disk
     await fs.writeFile(fullPath, fileBuffer);
     
-    // Return file information with correct URL path (using forward slashes)
-    const urlPath = path.posix.join('uploads', subFolder.replace(/\\/g, '/'), uniqueFileName);
-    
+    // Return file information with correct URL path
     return {
-      url: `/${urlPath}`, // Include the full path including subdirectories
-      path: urlPath,
       fileName: uniqueFileName,
-      originalName: fileName || 'uploaded-file',
+      filePath: fullPath,
+      url: `/uploads/${subFolder}/${uniqueFileName}`,
       size: fileBuffer.length
     };
   } catch (error) {
-    console.error('Local upload error:', error);
-    throw new Error('Failed to upload file to local storage');
+    console.error('Error uploading file:', error);
+    throw new Error('Failed to upload file');
   }
 };
+
+// [Rest of the file remains the same...]
 
 // Delete file from local storage
 const deleteFromLocal = async (filePath) => {

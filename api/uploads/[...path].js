@@ -3,15 +3,17 @@ import { join } from 'path';
 import { promisify } from 'util';
 import { pipeline } from 'stream';
 import { fileTypeFromFile } from 'file-type';
+import fs from 'fs/promises';
+import path from 'path';
 
 const pipelineAsync = promisify(pipeline);
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-// Base uploads directory (matches localUpload.js)
+// Base uploads directory
 const BASE_UPLOAD_DIR = process.env.VERCEL === '1'
-  ? join('/tmp', 'uploads')
+  ? '/tmp/uploads'
   : join(process.cwd(), 'uploads');
 
-// MIME type mapping
 const MIME_TYPES = {
   'jpg': 'image/jpeg',
   'jpeg': 'image/jpeg',
@@ -27,34 +29,33 @@ export default async function handler(req, res) {
   try {
     const { path: filePath } = req.query;
     
-    if (!filePath) {
-      return res.status(400).json({ success: false, message: 'File path is required' });
+    if (!filePath || !Array.isArray(filePath) || filePath.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid file path' });
     }
 
-    // Resolve the full file path
-    const fullPath = join(BASE_UPLOAD_DIR, ...filePath.split('/'));
+    const fullPath = join(BASE_UPLOAD_DIR, ...filePath);
     
     try {
-      // Get file stats to check if it exists
-      const stats = await require('fs').promises.stat(fullPath);
+      // Check if file exists
+      await fs.access(fullPath);
+      const stats = await fs.stat(fullPath);
       
       if (!stats.isFile()) {
         return res.status(404).json({ success: false, message: 'File not found' });
       }
       
       // Get file extension
-      const ext = fullPath.split('.').pop().toLowerCase();
-      
-      // Set appropriate content type
+      const ext = path.extname(fullPath).toLowerCase().slice(1);
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      res.setHeader('Content-Type', contentType);
       
-      // Set cache headers (1 day)
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      // Set headers
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', stats.size);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       
       // Stream the file
       const stream = createReadStream(fullPath);
-      await pipelineAsync(stream, res);
+      return await pipelineAsync(stream, res);
       
     } catch (err) {
       console.error('Error serving file:', err);
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
     }
   } catch (err) {
     console.error('Error in file server:', err);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }
 
