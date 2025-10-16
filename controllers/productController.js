@@ -76,6 +76,38 @@ exports.getProductsByType = async (req, res) => {
   }
 }
 
+// Search products by name or category
+exports.searchProducts = async (req, res) => {
+  try {
+    const { q: searchQuery, type } = req.query;
+    
+    if (!searchQuery) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const query = {
+      $or: [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { category: { $regex: searchQuery, $options: 'i' } }
+      ]
+    };
+
+    // Filter by product type if provided
+    if (type) {
+      query.type = type;
+    }
+
+    const products = await Product.find(query)
+      .populate('seller', 'name email')
+      .limit(10); // Limit to 10 results for performance
+
+    res.status(200).json({ products });
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ message: 'Error performing search', error: err.message });
+  }
+}
+
 exports.getProductById = async (req, res) => {
   const { id } = req.params;
   try {
